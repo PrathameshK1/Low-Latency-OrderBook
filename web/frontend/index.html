@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Order Book Monitor</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="title">📊 Live Order Book</h1>
+                <div class="status-indicator">
+                    <span class="status-dot" id="connectionStatus"></span>
+                    <span class="status-text" id="statusText">Connecting...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Column: Order Book Depth -->
+            <div class="panel orderbook-panel">
+                <h2 class="panel-title">Order Book Depth</h2>
+                <div class="bbo-display">
+                    <div class="bbo-item bid">
+                        <span class="bbo-label">Best Bid</span>
+                        <span class="bbo-price" id="bestBidPrice">-</span>
+                        <span class="bbo-qty" id="bestBidQty">-</span>
+                    </div>
+                    <div class="spread-display">
+                        <span class="spread-label">Spread</span>
+                        <span class="spread-value" id="spreadValue">-</span>
+                    </div>
+                    <div class="bbo-item ask">
+                        <span class="bbo-label">Best Ask</span>
+                        <span class="bbo-price" id="bestAskPrice">-</span>
+                        <span class="bbo-qty" id="bestAskQty">-</span>
+                    </div>
+                </div>
+                
+                <div class="orderbook-grid">
+                    <div class="orderbook-side bids-side">
+                        <div class="side-header bid-header">BIDS</div>
+                        <div class="levels-header">
+                            <span>Price</span>
+                            <span>Quantity</span>
+                            <span>Orders</span>
+                        </div>
+                        <div class="levels-container" id="bidsLevels"></div>
+                    </div>
+                    
+                    <div class="orderbook-side asks-side">
+                        <div class="side-header ask-header">ASKS</div>
+                        <div class="levels-header">
+                            <span>Price</span>
+                            <span>Quantity</span>
+                            <span>Orders</span>
+                        </div>
+                        <div class="levels-container" id="asksLevels"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Column: Depth Chart -->
+            <div class="panel chart-panel">
+                <h2 class="panel-title">Depth Visualization</h2>
+                <canvas id="depthChart"></canvas>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color bid-color"></span>
+                        <span>Bid Liquidity</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color ask-color"></span>
+                        <span>Ask Liquidity</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Trades & Stats -->
+            <div class="panel trades-panel">
+                <h2 class="panel-title">Recent Trades</h2>
+                <div class="trades-list" id="tradesList"></div>
+            </div>
+
+            <!-- Bottom Left: Metrics -->
+            <div class="panel metrics-panel">
+                <h2 class="panel-title">Performance Metrics</h2>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <span class="metric-label">Total Trades</span>
+                        <span class="metric-value" id="totalTrades">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Volume</span>
+                        <span class="metric-value" id="totalVolume">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Last Price</span>
+                        <span class="metric-value" id="lastPrice">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Active Orders</span>
+                        <span class="metric-value" id="activeOrders">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Mid Price</span>
+                        <span class="metric-value" id="midPrice">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Imbalance</span>
+                        <span class="metric-value" id="imbalance">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Right: Order Entry -->
+            <div class="panel entry-panel">
+                <h2 class="panel-title">Manual Order Entry</h2>
+                <div class="order-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Side</label>
+                            <select id="orderSide" class="form-control">
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="orderType" class="form-control">
+                                <option value="limit">Limit</option>
+                                <option value="market">Market</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price</label>
+                            <input type="number" id="orderPrice" class="form-control" placeholder="10000">
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" id="orderQty" class="form-control" placeholder="100">
+                        </div>
+                    </div>
+                    <button class="submit-btn" id="submitOrder">
+                        <span>Submit Order</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/websocket.js"></script>
+    <script src="js/orderbook.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
