@@ -44,6 +44,12 @@ target_link_libraries(lob_demo PRIVATE lob_core)
 enable_testing()
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
+# WebSocket Server
+option(USE_ZLIB "Enable zlib support" OFF)
+option(USE_TLS "Enable TLS support" OFF)
+add_subdirectory(include/lob/third_party/IXWebSocket)
+add_subdirectory(web/server)
+
 # Install rules
 install(TARGETS lob_core
     LIBRARY DESTINATION lib

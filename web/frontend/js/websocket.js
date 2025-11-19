@@ -1,6 +1,6 @@
 // WebSocket Connection Manager
 class WebSocketManager {
-    constructor(url = 'ws://localhost:8080') {
+    constructor(url = 'ws://localhost:8081') {
         this.url = url;
         this.ws = null;
         this.reconnectDelay = 1000;
@@ -18,7 +18,7 @@ class WebSocketManager {
     connect() {
         try {
             this.ws = new WebSocket(this.url);
-            
+
             this.ws.onopen = () => {
                 console.log('WebSocket connected');
                 this.reconnectDelay = 1000;
@@ -56,9 +56,9 @@ class WebSocketManager {
             this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts),
             this.maxReconnectDelay
         );
-        
+
         console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-        
+
         setTimeout(() => {
             this.connect();
         }, delay);

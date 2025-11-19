@@ -1,7 +1,7 @@
 // Main Application
 class OrderBookApp {
     constructor() {
-        this.ws = new WebSocketManager('ws://localhost:8080');
+        this.ws = new WebSocketManager('ws://localhost:8081');
         this.orderbook = new OrderBookVisualizer();
         this.chart = new DepthChart('depthChart');
 
@@ -66,6 +66,7 @@ class OrderBookApp {
     }
 
     handleTrade(data) {
+        console.log('Trade received:', data); // Debug log
         this.trades.unshift(data);
         if (this.trades.length > this.maxTrades) {
             this.trades.pop();
@@ -97,7 +98,19 @@ class OrderBookApp {
             const div = document.createElement('div');
             div.className = `trade-item ${trade.side}`;
 
-            const time = new Date(trade.timestamp / 1000).toLocaleTimeString();
+            // Handle timestamp (detect if nanoseconds or milliseconds)
+            let timestamp = trade.timestamp;
+            if (timestamp > 1e12 && timestamp < 1e15) {
+                // Likely milliseconds, do nothing
+            } else if (timestamp >= 1e15) {
+                // Likely nanoseconds, convert to milliseconds
+                timestamp = timestamp / 1000000;
+            } else if (timestamp < 1e12) {
+                // Likely seconds, convert to milliseconds
+                timestamp = timestamp * 1000;
+            }
+
+            const time = new Date(timestamp).toLocaleTimeString();
 
             div.innerHTML = `
                 <div class="trade-price">${this.formatPrice(trade.price)}</div>
@@ -141,14 +154,18 @@ class OrderBookApp {
         if (success) {
             // Show success animation
             const btn = document.getElementById('submitOrder');
+            const originalText = btn.innerHTML;
             btn.textContent = '✓ Submitted';
+            btn.classList.add('success');
+
             setTimeout(() => {
-                btn.innerHTML = '<span>Submit Order</span>';
+                btn.innerHTML = originalText;
+                btn.classList.remove('success');
             }, 1000);
 
-            // Clear form
-            document.getElementById('orderPrice').value = '';
-            document.getElementById('orderQty').value = '';
+            // Do NOT clear form to allow rapid entry/adjustments
+            // document.getElementById('orderPrice').value = '';
+            // document.getElementById('orderQty').value = '';
         } else {
             alert('Not connected to server');
         }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,11 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -46,7 +50,7 @@
                         <span class="bbo-qty" id="bestAskQty">-</span>
                     </div>
                 </div>
-                
+
                 <div class="orderbook-grid">
                     <div class="orderbook-side bids-side">
                         <div class="side-header bid-header">BIDS</div>
@@ -57,7 +61,7 @@
                         </div>
                         <div class="levels-container" id="bidsLevels"></div>
                     </div>
-                    
+
                     <div class="orderbook-side asks-side">
                         <div class="side-header ask-header">ASKS</div>
                         <div class="levels-header">
@@ -146,11 +150,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Price</label>
-                            <input type="number" id="orderPrice" class="form-control" placeholder="10000">
+                            <input type="number" id="orderPrice" class="form-control" placeholder="10000"
+                                onclick="this.select()">
                         </div>
                         <div class="form-group">
                             <label>Quantity</label>
-                            <input type="number" id="orderQty" class="form-control" placeholder="100">
+                            <input type="number" id="orderQty" class="form-control" placeholder="100"
+                                onclick="this.select()">
                         </div>
                     </div>
                     <button class="submit-btn" id="submitOrder">
@@ -167,4 +173,5 @@
     <script src="js/chart.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

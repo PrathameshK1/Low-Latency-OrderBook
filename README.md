@@ -146,11 +146,28 @@ Blocks: 1
 ✓ Demo completed successfully!
 ```
 
-### Step 3: View the Web GUI
+### Step 3: Start the WebSocket Server & View the GUI
 
-**Option A: Open directly in browser (easiest)**
+The WebSocket server connects the C++ orderbook with the web GUI for real-time interaction.
+
+**Start the C++ WebSocket Server** (required for live GUI):
 ```bash
-# Windows PowerShell
+# Run the high-performance C++ server
+./build/web/server/lob_server.exe
+```
+
+**Expected output:**
+```
+WebSocket server starting on port 8080...
+Client connected/disconnected event
+```
+
+> [!NOTE]
+> The Python script `web/server/websocket_server.py` is a mock simulation and is **not** connected to the C++ engine. Use `lob_server.exe` for the real experience.
+
+**Open the Web GUI** (in a new terminal/browser):
+```bash
+# Windows - Open HTML file directly
 Start-Process "file:///C:/Users/HP/Desktop/Limit-Order-Book/web/frontend/index.html"
 
 # Linux/Mac
@@ -158,21 +175,21 @@ open web/frontend/index.html    # Mac
 xdg-open web/frontend/index.html  # Linux
 ```
 
-**Option B: Use Python HTTP server** (if you have Python installed)
-```bash
-cd web
-python serve_gui.py
-
-# Then open browser to: http://localhost:8080
-```
-
 **What you'll see:**
-- 🌙 Beautiful dark theme with glassmorphism effects
-- 📊 Live orderbook updating every 2 seconds (mock data)
-- 📈 Depth chart showing bid/ask liquidity
-- 💱 Trade ticker with recent executions
-- 📊 Metrics: total trades, volume, last price, VWAP
-- ⌨️ Order entry form (shows "Not connected" - will work when WebSocket server added)
+- 🟢 **"Connected"** status in top-left (green indicator)
+- 📊 **Live orderbook** depth with bids and asks updating every 500ms
+- 📈 **Depth chart** visualizing bid/ask liquidity
+- 💱 **Trade ticker** showing executions
+- 📊 **Metrics dashboard** with live statistics
+- ⌨️ **Order entry form** - submit buy/sell orders that execute in real-time!
+
+**Try it out:**
+1. Enter quantity (e.g., 100) and price (e.g., 10000)
+2. Select "Buy" or "Sell" and "Limit" or "Market"
+3. Click "Submit Order"
+4. Watch the order execute and trades appear in the ticker!
+
+**Stop the server:** Press `Ctrl+C` in the terminal running the server
 
 ---
 
@@ -302,11 +319,18 @@ Limit-Order-Book/
 - Benchmark with your `MarkovParetoOrderGenerator`
 - Create trader bot personas (market maker, HFT, retail)
 
+### WebSocket Server (✅ **COMPLETE**):
+- ✅ **Python WebSocket server** ready to use! (`web/server/websocket_server.py`)
+- ✅ Real-time L2 market data broadcasting
+- ✅ Order submission from GUI (buy/sell, market/limit)
+- ✅ Trade execution with live updates
+- 🔄 **Future enhancement**: Integrate with C++ orderbook via pybind11 bindings
+
 ### Advanced Features (Medium):
-- WebSocket server to connect GUI to C++ backend
 - Persistence layer (save/load orderbook state)
 - More order types (stop-loss, iceberg, IOC, FOK)
 - Multi-symbol support
+- Historical data replay
 
 ### Production Features (Hard):
 - FIX protocol integration
