@@ -127,41 +127,85 @@
                 </div>
             </div>
 
-            <!-- Bottom Right: Order Entry -->
+            <!-- Bottom Right: Modern Order Entry -->
             <div class="panel entry-panel">
-                <h2 class="panel-title">Manual Order Entry</h2>
-                <div class="order-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Side</label>
-                            <select id="orderSide" class="form-control">
-                                <option value="buy">Buy</option>
-                                <option value="sell">Sell</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Type</label>
-                            <select id="orderType" class="form-control">
-                                <option value="limit">Limit</option>
-                                <option value="market">Market</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Price</label>
-                            <input type="number" id="orderPrice" class="form-control" placeholder="10000"
-                                onclick="this.select()">
-                        </div>
-                        <div class="form-group">
-                            <label>Quantity</label>
-                            <input type="number" id="orderQty" class="form-control" placeholder="100"
-                                onclick="this.select()">
-                        </div>
-                    </div>
-                    <button class="submit-btn" id="submitOrder">
-                        <span>Submit Order</span>
+                <h2 class="panel-title">Place Order</h2>
+
+                <!-- Buy/Sell Tabs -->
+                <div class="order-side-tabs">
+                    <button class="side-tab buy-tab active" onclick="window.app.setSide('buy')" id="buyTab">
+                        <span class="tab-icon">📈</span>
+                        <span class="tab-text">BUY</span>
                     </button>
+                    <button class="side-tab sell-tab" onclick="window.app.setSide('sell')" id="sellTab">
+                        <span class="tab-icon">📉</span>
+                        <span class="tab-text">SELL</span>
+                    </button>
+                </div>
+
+                <div class="order-form">
+                    <!-- Limit/Market Type Toggle -->
+                    <div class="form-section">
+                        <label class="section-label">Order Type</label>
+                        <div class="type-toggle-group">
+                            <button class="type-toggle active" onclick="window.app.setType('limit')" id="limitBtn">
+                                Limit
+                            </button>
+                            <button class="type-toggle" onclick="window.app.setType('market')" id="marketBtn">
+                                Market
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Price Input -->
+                    <div class="form-section" id="priceSection">
+                        <label class="section-label" for="orderPrice">Price</label>
+                        <div class="input-group">
+                            <input type="number" id="orderPrice" class="modern-input" placeholder="10000"
+                                onfocus="this.select()">
+                            <span class="input-unit">USD</span>
+                        </div>
+                    </div>
+
+                    <!-- Quantity Input with Presets -->
+                    <div class="form-section">
+                        <label class="section-label" for="orderQty">Quantity</label>
+                        <div class="input-group">
+                            <input type="number" id="orderQty" class="modern-input" placeholder="100"
+                                onfocus="this.select()">
+                            <span class="input-unit">units</span>
+                        </div>
+
+                        <!-- Quick Quantity Presets -->
+                        <div class="qty-presets">
+                            <button class="preset-btn" onclick="window.app.setQuantity(25)">25</button>
+                            <button class="preset-btn" onclick="window.app.setQuantity(50)">50</button>
+                            <button class="preset-btn" onclick="window.app.setQuantity(100)">100</button>
+                            <button class="preset-btn" onclick="window.app.setQuantity(500)">500</button>
+                        </div>
+                    </div>
+
+                    <!-- Order Total Preview -->
+                    <div class="order-summary-modern">
+                        <span class="summary-label">Estimated Total</span>
+                        <span class="summary-value" id="orderTotal">0.00 USD</span>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button class="submit-order-btn buy" id="submitOrder">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">Place Buy Order</span>
+                    </button>
+
+                    <!-- Hidden select elements for backward compatibility -->
+                    <select id="orderSide" style="display:none">
+                        <option value="buy">Buy</option>
+                        <option value="sell">Sell</option>
+                    </select>
+                    <select id="orderType" style="display:none">
+                        <option value="limit">Limit</option>
+                        <option value="market">Market</option>
+                    </select>
                 </div>
             </div>
         </div>

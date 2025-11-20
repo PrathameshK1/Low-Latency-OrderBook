@@ -515,3 +515,244 @@ body {
         grid-template-columns: 1fr;
     }
 }
+/* ==============================================
+   MODERN ORDER ENTRY UI STYLES
+   ============================================== */
+
+/* Buy/Sell Tabs */
+.order-side-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.side-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.side-tab .tab-icon {
+    font-size: 18px;
+}
+
+.side-tab.buy-tab.active {
+    background: linear-gradient(135deg, var(--bid-color), #00d4ff);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0, 245, 255, 0.4);
+}
+
+.side-tab.sell-tab.active {
+    background: linear-gradient(135deg, var(--ask-color), #ff3388);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255, 0, 110, 0.4);
+}
+
+.side-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 20px;
+}
+
+.section-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+/* Type Toggle Group */
+.type-toggle-group {
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.type-toggle {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.type-toggle.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.type-toggle:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Modern Input Group */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.modern-input {
+    width: 100%;
+    padding: 14px 16px;
+    padding-right: 60px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.modern-input::placeholder {
+    color: var(--text-muted);
+}
+
+.input-unit {
+    position: absolute;
+    right: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Quantity Presets */
+.qty-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.preset-btn {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.preset-btn:active {
+    transform: translateY(0);
+}
+
+/* Order Summary Modern */
+.order-summary-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.summary-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Submit Button Modern */
+.submit-order-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit-order-btn .btn-icon {
+    font-size: 20px;
+}
+
+.submit-order-btn.buy {
+    background: linear-gradient(135deg, var(--bid-color), #00d4ff);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0, 245, 255, 0.3);
+}
+
+.submit-order-btn.sell {
+    background: linear-gradient(135deg, var(--ask-color), #ff3388);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255, 0, 110, 0.3);
+}
+
+.submit-order-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 245, 255, 0.5);
+}
+
+.submit-order-btn.sell:hover {
+    box-shadow: 0 6px 30px rgba(255, 0, 110, 0.5);
+}
+
+.submit-order-btn:active {
+    transform: translateY(0);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+    .qty-presets {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

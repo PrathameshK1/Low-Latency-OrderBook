@@ -33,6 +33,7 @@ class OrderBookServer : public ITradeListener {
 private:
     // IXWebSocket server
     ix::WebSocketServer wsServer;
+    uint16_t serverPort;
     
     // OrderBook components
     OrderBook* orderBook;
@@ -44,8 +45,10 @@ private:
     std::atomic<uint64_t> nextOrderId{1};
     
 public:
-    OrderBookServer(OrderBook* ob, OrderPool* pool, MarketStatistics* statistics)
-        : wsServer(8080), orderBook(ob), orderPool(pool), stats(statistics) {
+    OrderBookServer(OrderBook* ob, OrderPool* pool, MarketStatistics* statistics, uint16_t port = 9090)
+        : wsServer(port, "0.0.0.0"), // Bind to all interfaces instead of localhost
+          serverPort(port),
+          orderBook(ob), orderPool(pool), stats(statistics) {
         
         // Configure WebSocket server
         wsServer.setOnConnectionCallback(
@@ -82,17 +85,14 @@ public:
     /**
      * @brief Start the WebSocket server on specified port
      */
-    void start(uint16_t serverPort = 8080) {
-        if (serverPort != 8080) {
-             std::cerr << "Warning: Port change not supported in this implementation, using default 8080" << std::endl;
-        }
-
+    void start(uint16_t serverPort = 9090) {
+        (void)serverPort; // Port is set in constructor now
         running = true;
-        std::cout << "WebSocket server starting on port 8080..." << std::endl;
+        std::cout << "WebSocket server starting on port " << this->serverPort << "..." << std::endl;
         
         auto res = wsServer.listenAndStart();
         if (!res) {
-            std::cerr << "Server error: failed to listen" << std::endl;
+            std::cerr << "Server error: failed to listen on port " << this->serverPort << std::endl;
             running = false;
         }
     }

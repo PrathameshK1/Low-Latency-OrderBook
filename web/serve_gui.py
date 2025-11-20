@@ -9,7 +9,7 @@ import socketserver
 import os
 import sys
 
-PORT = 8080
+PORT = 8082
 DIRECTORY = "web/frontend"
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -36,7 +36,7 @@ def main():
     
     with socketserver.TCPServer(("", PORT), MyHTTPRequestHandler) as httpd:
         print(f"\\n{'='*60}")
-        print(f"  📊 Order Book GUI Server")
+        print(f"  Order Book GUI Server")
         print(f"{'='*60}")
         print(f"  Serving at: http://localhost:{PORT}")
         print(f"  Directory: {os.path.abspath(DIRECTORY)}")

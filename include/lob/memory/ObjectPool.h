@@ -35,7 +35,7 @@ private:
         
         // Get pointer to object at index
         T* getObject(size_t index) {
-            return reinterpret_cast<T*>(&storage[index * sizeof(T)]);
+            return reinterpret_cast<T*>(storage.data() + index * sizeof(T));
         }
         
         // Find next free slot

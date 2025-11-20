@@ -35,6 +35,66 @@ class OrderBookApp {
     setupUI() {
         // Initialize with mock data for testing
         this.generateMockData();
+
+        // Initialize modern order entry state
+        this.currentSide = 'buy';
+        this.currentType = 'limit';
+
+        // Setup input listeners for total calculation
+        document.getElementById('orderPrice').addEventListener('input', () => this.updateOrderTotal());
+        document.getElementById('orderQty').addEventListener('input', () => this.updateOrderTotal());
+    }
+
+    // Modern UI functions
+    setSide(side) {
+        this.currentSide = side;
+        document.getElementById('orderSide').value = side;
+
+        // Update tab styles
+        document.querySelectorAll('.side-tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(side === 'buy' ? 'buyTab' : 'sellTab').classList.add('active');
+
+        // Update submit button
+        const submitBtn = document.getElementById('submitOrder');
+        submitBtn.className = `submit-order-btn ${side}`;
+        submitBtn.querySelector('.btn-text').textContent =
+            `Place ${side.charAt(0).toUpperCase() + side.slice(1)} Order`;
+    }
+
+    setType(type) {
+        this.currentType = type;
+        document.getElementById('orderType').value = type;
+
+        // Update toggle styles
+        document.querySelectorAll('.type-toggle').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(type === 'limit' ? 'limitBtn' : 'marketBtn').classList.add('active');
+
+        // Handle price input visibility
+        const priceSection = document.getElementById('priceSection');
+        const priceInput = document.getElementById('orderPrice');
+        if (type === 'market') {
+            priceSection.style.display = 'none';
+            priceInput.value = '';
+        } else {
+            priceSection.style.display = 'block';
+        }
+
+        this.updateOrderTotal();
+    }
+
+    setQuantity(qty) {
+        document.getElementById('orderQty').value = qty;
+        this.updateOrderTotal();
+    }
+
+    updateOrderTotal() {
+        const price = parseFloat(document.getElementById('orderPrice').value) || 0;
+        const qty = parseFloat(document.getElementById('orderQty').value) || 0;
+        const total = price * qty;
+        const totalEl = document.getElementById('orderTotal');
+        if (totalEl) {
+            totalEl.textContent = `${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
+        }
     }
 
     handleConnection(data) {

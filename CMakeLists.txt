@@ -50,6 +50,12 @@ option(USE_TLS "Enable TLS support" OFF)
 add_subdirectory(include/lob/third_party/IXWebSocket)
 add_subdirectory(web/server)
 
+# Python Bindings
+option(BUILD_PYTHON_BINDINGS "Build Python bindings with pybind11" ON)
+if(BUILD_PYTHON_BINDINGS)
+    add_subdirectory(bindings)
+endif()
+
 # Install rules
 install(TARGETS lob_core
     LIBRARY DESTINATION lib
