@@ -1,7 +1,13 @@
-// Main Application
+/**
+ * Main OrderBook Application
+ * Manages WebSocket connection, order book visualization, and user interactions
+ */
 class OrderBookApp {
+    /**
+     * Initialize the application
+     */
     constructor() {
-        this.ws = new WebSocketManager('ws://localhost:8081');
+        this.ws = new WebSocketManager(CONFIG.WS_URL);
         this.orderbook = new OrderBookVisualizer();
         this.chart = new DepthChart('depthChart');
         this.analytics = new MarketAnalytics();
@@ -10,8 +16,8 @@ class OrderBookApp {
         this.manualTradesList = document.getElementById('manualTradesList');
         this.trades = [];
         this.manualTrades = [];
-        this.maxTrades = 50;
-        this.maxManualTrades = 20;
+        this.maxTrades = CONFIG.MAX_TRADES;
+        this.maxManualTrades = CONFIG.MAX_MANUAL_TRADES;
         this.currentTradeTab = 'all';
         this.manualOrderCount = 0;
 
@@ -590,20 +596,21 @@ class OrderBookApp {
         return parseInt(str.replace(/,/g, '')) || 0;
     }
 
-    // Generate mock data for demonstration when not connected
+    /**
+     * Generate mock data for demonstration when not connected
+     */
     generateMockData() {
-        const basePrice = 10000;
         const bids = [];
         const asks = [];
 
         for (let i = 0; i < 10; i++) {
             bids.push({
-                price: basePrice - i * 10,
+                price: CONFIG.BASE_PRICE - i * 10,
                 qty: Math.floor(Math.random() * 1000) + 100,
                 orders: Math.floor(Math.random() * 5) + 1
             });
             asks.push({
-                price: basePrice + 10 + i * 10,
+                price: CONFIG.BASE_PRICE + 10 + i * 10,
                 qty: Math.floor(Math.random() * 1000) + 100,
                 orders: Math.floor(Math.random() * 5) + 1
             });
@@ -616,7 +623,7 @@ class OrderBookApp {
             if (this.ws.ws && this.ws.ws.readyState !== WebSocket.OPEN) {
                 this.generateMockData();
             }
-        }, 2000);
+        }, CONFIG.MOCK_UPDATE_INTERVAL);
     }
 }
 

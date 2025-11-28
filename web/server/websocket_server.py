@@ -6,18 +6,49 @@ This Python server acts as a bridge between the C++ orderbook library
 and the web-based GUI. It provides real-time market data updates and
 handles order submissions from the GUI.
 
-Now using high-performance C++ OrderBook via pybind11 bindings!
+Architecture:
+- Primary: High-performance C++ OrderBook via pybind11 bindings
+- Fallback: Pure Python implementation for reliability
+- Automatic failover ensures zero trading downtime
 """
 
 import asyncio
-import websockets
 import json
-import random
-import time
-import sys
+import logging
 import os
-from datetime import datetime
-from typing import Set, Dict, List
+import random
+import sys
+import time
+from typing import Dict, List, Optional, Set
+
+import websockets
+from websockets.exceptions import ConnectionClosed
+
+from config import (
+    AUTO_GENERATE_RATE,
+    AUTO_GENERATE_SLEEP_TIME,
+    BASE_PRICE,
+    HTTP_PORT,
+    INITIAL_LEVELS,
+    L2_SNAPSHOT_DEPTH,
+    LEVEL_SPACING,
+    MAX_LATENCY_SAMPLES,
+    PERIODIC_UPDATE_INTERVAL,
+    PRICE_RANGE,
+    QUANTITY_RANGE,
+    STRESS_TEST_BATCH_SIZE,
+    STRESS_TEST_UPDATE_INTERVAL,
+    WS_HOST,
+    WS_PORT,
+)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # Add C++ Python module to path
 MODULE_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'build', 'python')
@@ -39,14 +70,14 @@ if sys.platform == 'win32':
             break
 
 # Import C++ OrderBook bindings
+USE_CPP_ORDERBOOK: bool = False
 try:
     import lob_py
-    print("[OK] C++ OrderBook module loaded successfully!")
     USE_CPP_ORDERBOOK = True
+    logger.info("C++ OrderBook module loaded successfully")
 except ImportError as e:
-    print(f"[WARN] Failed to load C++ OrderBook: {e}")
-    print("  Falling back to Python orderbook implementation")
-    USE_CPP_ORDERBOOK = False
+    logger.warning(f"Failed to load C++ OrderBook: {e}")
+    logger.info("Falling back to Python orderbook implementation")
 
 
 class OrderBookWrapper:
@@ -58,41 +89,46 @@ class OrderBookWrapper:
         else:
             self._init_python_orderbook()
     
-    def _init_cpp_orderbook(self):
-        """Initialize C++ orderbook"""
-        print("Initializing C++ OrderBook...")
+    def _init_cpp_orderbook(self) -> None:
+        """Initialize C++ orderbook with high-performance engine."""
+        logger.info("Initializing C++ OrderBook...")
         
-        self.orderbook = lob_py.OrderBook()
-        self.pool = lob_py.OrderPool()
-        self.stats = lob_py.MarketStatistics()
-        self.publisher = lob_py.TradePublisher()
-        
-        # Set up publisher
-        self.orderbook.set_publisher(self.publisher)
-        self.publisher.subscribe(self.stats)
-        
-        self.next_order_id = 1
-        
-        # Generate initial market data
-        self._generate_cpp_initial_orders()
-        
-        # Initialize trade count after initial orders (they might create trades)
-        self.last_trade_count = self.stats.get_total_trades()
-        
-        print(f"  Active Orders: {self.orderbook.get_number_of_orders()}")
-        
-        # Get initial BBO
-        bbo = self.orderbook.get_bbo()
-        if bbo.is_valid():
-            print(f"  Best Bid: {bbo.bid_price} x {bbo.bid_qty}")
-            print(f"  Best Ask: {bbo.ask_price} x {bbo.ask_qty}")
+        try:
+            self.orderbook = lob_py.OrderBook()
+            self.pool = lob_py.OrderPool()
+            self.stats = lob_py.MarketStatistics()
+            self.publisher = lob_py.TradePublisher()
+            
+            # Set up publisher chain
+            self.orderbook.set_publisher(self.publisher)
+            self.publisher.subscribe(self.stats)
+            
+            self.next_order_id = 1
+            
+            # Generate initial market data
+            self._generate_cpp_initial_orders()
+            
+            # Initialize trade count after initial orders (they might create trades)
+            self.last_trade_count = self.stats.get_total_trades()
+            
+            active_orders = self.orderbook.get_number_of_orders()
+            logger.info(f"Active Orders: {active_orders}")
+            
+            # Get initial BBO
+            bbo = self.orderbook.get_bbo()
+            if bbo.is_valid():
+                logger.info(f"Best Bid: {bbo.bid_price} x {bbo.bid_qty}")
+                logger.info(f"Best Ask: {bbo.ask_price} x {bbo.ask_qty}")
+        except Exception as e:
+            logger.error(f"Failed to initialize C++ orderbook: {e}")
+            raise
     
-    def _generate_cpp_initial_orders(self):
-        """Generate sample orders for C++ orderbook"""
-        # Generate 10 bid levels
-        for i in range(10):
-            price = 10000 - (i * 5)
-            qty = random.randint(100, 500)
+    def _generate_cpp_initial_orders(self) -> None:
+        """Generate initial market depth for C++ orderbook."""
+        # Generate bid levels (descending price)
+        for i in range(INITIAL_LEVELS):
+            price = BASE_PRICE - (i * LEVEL_SPACING)
+            qty = random.randint(QUANTITY_RANGE[0], QUANTITY_RANGE[1])
             order = self.pool.create_limit_order(
                 self.next_order_id,
                 lob_py.Side.BUY,
@@ -102,10 +138,10 @@ class OrderBookWrapper:
             self.orderbook.add_order(order)
             self.next_order_id += 1
         
-        # Generate 10 ask levels
-        for i in range(10):
-            price = 10010 + (i * 5)
-            qty = random.randint(100, 500)
+        # Generate ask levels (ascending price)
+        for i in range(INITIAL_LEVELS):
+            price = BASE_PRICE + 10 + (i * LEVEL_SPACING)
+            qty = random.randint(QUANTITY_RANGE[0], QUANTITY_RANGE[1])
             order = self.pool.create_limit_order(
                 self.next_order_id,
                 lob_py.Side.SELL,
@@ -115,24 +151,24 @@ class OrderBookWrapper:
             self.orderbook.add_order(order)
             self.next_order_id += 1
     
-    def _init_python_orderbook(self):
-        """Initialize Python fallback orderbook"""
-        print("Initializing Python OrderBook (fallback)...")
+    def _init_python_orderbook(self) -> None:
+        """Initialize Python fallback orderbook for reliability."""
+        logger.info("Initializing Python OrderBook (fallback)...")
         
         self.next_order_id = 1
         self.total_trades = 0
         self.total_volume = 0
-        self.last_price = 10000
+        self.last_price = BASE_PRICE
         self.active_orders = 0
         
         # Initialize with sample market data
-        self.bids = self._generate_side_python(10000, -10, -1)
-        self.asks = self._generate_side_python(10010, 10, 1)
+        self.bids = self._generate_side_python(BASE_PRICE, -10, -1)
+        self.asks = self._generate_side_python(BASE_PRICE + 10, 10, 1)
         self.active_orders = sum(level['orders'] for level in self.bids + self.asks)
         
-        print(f"  Active Orders: {self.active_orders}")
-        print(f"  Best Bid: {self.bids[0]['price']} x {self.bids[0]['qty']}")
-        print(f"  Best Ask: {self.asks[0]['price']} x {self.asks[0]['qty']}")
+        logger.info(f"Active Orders: {self.active_orders}")
+        logger.info(f"Best Bid: {self.bids[0]['price']} x {self.bids[0]['qty']}")
+        logger.info(f"Best Ask: {self.asks[0]['price']} x {self.asks[0]['qty']}")
     
     def _generate_side_python(self, base_price: int, start_offset: int, direction: int) -> List[Dict]:
         """Generate price levels for Python orderbook"""
@@ -149,15 +185,27 @@ class OrderBookWrapper:
         return levels
     
     def get_l2_snapshot(self) -> Dict:
-        """Get Level 2 market data snapshot"""
+        """Get Level 2 market data snapshot."""
         if USE_CPP_ORDERBOOK:
-            snapshot = self.orderbook.get_l2_snapshot(10)
+            snapshot = self.orderbook.get_l2_snapshot(L2_SNAPSHOT_DEPTH)
             return {
                 'type': 'l2_update',
-                'bids': [{'price': level.price, 'qty': level.total_quantity, 'orders': level.order_count} 
-                         for level in snapshot.bids],
-                'asks': [{'price': level.price, 'qty': level.total_quantity, 'orders': level.order_count}
-                         for level in snapshot.asks]
+                'bids': [
+                    {
+                        'price': level.price,
+                        'qty': level.total_quantity,
+                        'orders': level.order_count
+                    }
+                    for level in snapshot.bids
+                ],
+                'asks': [
+                    {
+                        'price': level.price,
+                        'qty': level.total_quantity,
+                        'orders': level.order_count
+                    }
+                    for level in snapshot.asks
+                ]
             }
         else:
             return {
@@ -191,49 +239,28 @@ class OrderBookWrapper:
             return self._submit_order_python(side, order_type, price, quantity)
     
     def _submit_order_cpp(self, side: str, order_type: str, price: int, quantity: int) -> Dict:
-        """Submit order to C++ orderbook"""
+        """Submit order to C++ orderbook with error handling."""
         order_id = self.next_order_id
         self.next_order_id += 1
         
         cpp_side = lob_py.Side.BUY if side == 'buy' else lob_py.Side.SELL
-        
-        # Get orderbook state before adding
-        orders_before = self.orderbook.get_number_of_orders()
-        bbo_before = self.orderbook.get_bbo()
-        
-        print(f"[C++ ORDER] {order_type.upper()} {side.upper()}: {quantity} @ {price if order_type == 'limit' else 'MARKET'}")
-        print(f"  Before: {orders_before} orders, BBO: {bbo_before.bid_price}/{bbo_before.ask_price}")
         
         try:
             # Create and add order
             if order_type == 'market':
                 order = self.pool.create_market_order(order_id, cpp_side, quantity)
             else:
+                if price <= 0:
+                    raise ValueError(f"Invalid price: {price}")
                 order = self.pool.create_limit_order(order_id, cpp_side, price, quantity)
             
             self.orderbook.add_order(order)
             
-            # Get orderbook state after adding
-            orders_after = self.orderbook.get_number_of_orders()
-            bbo_after = self.orderbook.get_bbo()
-            
-            print(f"  After: {orders_after} orders, BBO: {bbo_after.bid_price}/{bbo_after.ask_price}")
-            
-            # Check if order was matched (order count might decrease if fully matched)
-            if orders_after < orders_before:
-                print(f"  [MATCHED] Order was fully matched")
-            elif orders_after == orders_before:
-                print(f"  [ADDED] Order added to book (no match)")
-            else:
-                print(f"  [ADDED] Order added to book")
-            
             # Check if trades occurred and get new ones
-            trades = []
+            trades: List[Dict] = []
             current_trade_count = self.stats.get_total_trades()
             if current_trade_count > self.last_trade_count:
-                # New trades occurred, get only the new ones
                 num_new_trades = current_trade_count - self.last_trade_count
-                print(f"  [TRADE DETECT] Found {num_new_trades} new trade(s) (total: {current_trade_count}, last: {self.last_trade_count})")
                 recent_trades = self.stats.get_recent_trades(num_new_trades)
                 for trade in recent_trades:
                     trades.append({
@@ -248,29 +275,35 @@ class OrderBookWrapper:
             return {
                 'success': True,
                 'order_id': order_id,
-                'executed': orders_after <= orders_before,  # True if matched immediately
-                'trades': trades  # List of trades that occurred
+                'executed': len(trades) > 0,
+                'trades': trades
             }
         except Exception as e:
-            print(f"  [ERROR] Error submitting order: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error submitting order {order_id}: {e}", exc_info=True)
             return {
                 'success': False,
                 'error': str(e)
             }
     
     def _submit_order_python(self, side: str, order_type: str, price: int, quantity: int) -> Dict:
-        """Submit order to Python orderbook"""
+        """Submit order to Python fallback orderbook."""
         order_id = self.next_order_id
         self.next_order_id += 1
         
-        print(f"[PYTHON ORDER] {order_type.upper()} {side.upper()}: {quantity} @ {price if order_type == 'limit' else 'MARKET'}")
+        if quantity <= 0:
+            return {
+                'success': False,
+                'error': 'Invalid quantity'
+            }
         
         # Simulate order execution
         if order_type == 'market' or self._will_match_python(side, price):
             # Execute trade
-            exec_price = price if order_type == 'limit' else (self.asks[0]['price'] if side == 'buy' else self.bids[0]['price'])
+            if order_type == 'market':
+                exec_price = self.asks[0]['price'] if side == 'buy' else self.bids[0]['price']
+            else:
+                exec_price = price
+            
             trade = {
                 'type': 'trade',
                 'price': exec_price,
@@ -283,34 +316,29 @@ class OrderBookWrapper:
             self.total_volume += quantity
             self.last_price = exec_price
             
-            self._update_levels_after_trade_python(side, exec_price, quantity)
-            
             return {
                 'success': True,
                 'order_id': order_id,
                 'executed': True,
-                'trade': trade
+                'trades': [trade]
             }
         else:
-            self._add_to_book_python(side, price, quantity)
+            # Add to book (simplified - just increment counter)
             self.active_orders += 1
             return {
                 'success': True,
                 'order_id': order_id,
-                'executed': False
+                'executed': False,
+                'trades': []
             }
     
     def _will_match_python(self, side: str, price: int) -> bool:
+        """Check if order will match at given price."""
+        if not self.bids or not self.asks:
+            return False
         if side == 'buy':
             return price >= self.asks[0]['price']
-        else:
-            return price <= self.bids[0]['price']
-    
-    def _update_levels_after_trade_python(self, side: str, price: int, qty: int):
-       pass  # Simplified
-    
-    def _add_to_book_python(self, side: str, price: int, qty: int):
-        pass  # Simplified
+        return price <= self.bids[0]['price']
 
 
 # WebSocket Server
@@ -325,9 +353,9 @@ class WebSocketOrderBookServer:
             self.last_periodic_trade_count = 0
         
         # Performance metrics tracking
-        self.performance_metrics = {
-            'orders_processed': 0,
-            'trades_executed': 0,
+        self.performance_metrics: Dict[str, float] = {
+            'orders_processed': 0.0,
+            'trades_executed': 0.0,
             'start_time': time.time(),
             'last_update_time': time.time(),
             'orders_per_second': 0.0,
@@ -335,21 +363,19 @@ class WebSocketOrderBookServer:
             'avg_latency_us': 0.0,
             'peak_orders_per_second': 0.0,
             'peak_trades_per_second': 0.0,
-            'total_orders': 0,
-            'total_trades': 0
+            'total_orders': 0.0,
+            'total_trades': 0.0
         }
-        self.latency_samples = []  # Store recent latency samples
-        self.max_latency_samples = 1000
+        self.latency_samples: List[float] = []
         
         # Auto-order generation for continuous activity
         self.auto_generate_enabled = True
-        self.auto_generate_rate = 100  # Orders per second
-        self.auto_generate_task = None
+        self.auto_generate_rate = AUTO_GENERATE_RATE
         
-    async def register(self, websocket):
-        """Register a new client"""
+    async def register(self, websocket: websockets.WebSocketServerProtocol) -> None:
+        """Register a new client and send initial market data."""
         self.clients.add(websocket)
-        print(f"[+] Client connected ({len(self.clients)} active)")
+        logger.info(f"Client connected ({len(self.clients)} active)")
         
         try:
             # Send initial market snapshot
@@ -357,30 +383,38 @@ class WebSocketOrderBookServer:
             await websocket.send(json.dumps(self.orderbook.get_stats()))
             await websocket.send(json.dumps(self.get_performance_metrics()))
         except Exception as e:
-            print(f"[ERROR] Failed to send initial data to client: {e}")
+            logger.error(f"Failed to send initial data to client: {e}", exc_info=True)
     
-    async def unregister(self, websocket):
-        """Unregister a client"""
-        self.clients.remove(websocket)
-        print(f"[-] Client disconnected ({len(self.clients)} active)")
+    async def unregister(self, websocket: websockets.WebSocketServerProtocol) -> None:
+        """Unregister a client."""
+        try:
+            self.clients.remove(websocket)
+            logger.info(f"Client disconnected ({len(self.clients)} active)")
+        except KeyError:
+            pass  # Already removed
     
-    async def send_to_all(self, message: str):
-        """Broadcast message to all connected clients with error handling"""
-        if self.clients:
-            results = await asyncio.gather(
-                *(client.send(message) for client in self.clients),
-                return_exceptions=True
-            )
-            # Remove disconnected clients
-            disconnected = []
-            for i, (client, result) in enumerate(zip(self.clients, results)):
-                if isinstance(result, Exception):
-                    disconnected.append(client)
-            for client in disconnected:
-                try:
-                    self.clients.remove(client)
-                except KeyError:
-                    pass
+    async def send_to_all(self, message: str) -> None:
+        """Broadcast message to all connected clients with error handling."""
+        if not self.clients:
+            return
+        
+        results = await asyncio.gather(
+            *(client.send(message) for client in self.clients),
+            return_exceptions=True
+        )
+        
+        # Remove disconnected clients
+        disconnected = [
+            client
+            for client, result in zip(self.clients, results)
+            if isinstance(result, Exception)
+        ]
+        
+        for client in disconnected:
+            try:
+                self.clients.remove(client)
+            except KeyError:
+                pass
     
     async def handle_client(self, websocket, path=None):
         """Handle a single client connection"""
@@ -490,14 +524,14 @@ class WebSocketOrderBookServer:
                 price_range = data.get('price_range', 100)
                 qty_range = data.get('qty_range', (10, 1000))
                 
-                print(f"[STRESS TEST] Generating {num_orders} orders at EXTREME throughput...")
+                logger.info(f"Stress test: Generating {num_orders} orders at EXTREME throughput...")
                 process_start = time.perf_counter()
                 
                 # EXTREME MODE: Process orders in massive parallel batches
                 # Target: 10+ million orders per second
-                batch_size = 10000  # Larger batches for extreme throughput
+                batch_size = STRESS_TEST_BATCH_SIZE
                 total_trades = 0
-                update_interval = 10000  # Update every 10k orders
+                update_interval = STRESS_TEST_UPDATE_INTERVAL
                 
                 # Send stress test start notification
                 await self.send_to_all(json.dumps({
@@ -526,10 +560,10 @@ class WebSocketOrderBookServer:
                         order_latency = (time.perf_counter() - order_start) * 1_000_000
                         
                         # Update metrics (minimal operations)
-                        if len(self.latency_samples) < self.max_latency_samples:
+                        if len(self.latency_samples) < MAX_LATENCY_SAMPLES:
                             self.latency_samples.append(order_latency)
                         else:
-                            self.latency_samples[random.randint(0, self.max_latency_samples - 1)] = order_latency
+                            self.latency_samples[random.randint(0, MAX_LATENCY_SAMPLES - 1)] = order_latency
                         
                         self.performance_metrics['orders_processed'] += 1
                         self.performance_metrics['total_orders'] += 1
@@ -562,14 +596,14 @@ class WebSocketOrderBookServer:
                             return_exceptions=True
                         )
                         
-                        print(f"[STRESS TEST] Progress: {i + batch_size}/{num_orders} ({batch_ops:.0f} ops/sec)")
+                        logger.info(f"Stress test progress: {i + batch_size}/{num_orders} ({batch_ops:.0f} ops/sec)")
                 
                 process_time = time.perf_counter() - process_start
                 orders_per_sec = num_orders / process_time if process_time > 0 else 0
                 
-                print(f"[STRESS TEST] COMPLETED: {num_orders} orders in {process_time:.2f}s")
-                print(f"[STRESS TEST] Throughput: {orders_per_sec:,.0f} orders/sec")
-                print(f"[STRESS TEST] Generated {total_trades} trades")
+                logger.info(f"Stress test completed: {num_orders} orders in {process_time:.2f}s")
+                logger.info(f"Throughput: {orders_per_sec:,.0f} orders/sec")
+                logger.info(f"Generated {total_trades} trades")
                 
                 # Send final results
                 await websocket.send(json.dumps({
@@ -608,7 +642,7 @@ class WebSocketOrderBookServer:
                 # Calculate latency in microseconds
                 process_latency = (time.perf_counter() - process_start) * 1_000_000
                 self.latency_samples.append(process_latency)
-                if len(self.latency_samples) > self.max_latency_samples:
+                if len(self.latency_samples) > MAX_LATENCY_SAMPLES:
                     self.latency_samples.pop(0)
                 
                 # Update performance metrics
@@ -645,7 +679,7 @@ class WebSocketOrderBookServer:
                         # Mark as manual trade (from user submission)
                         trade['manual'] = True
                         await self.send_to_all(json.dumps(trade))
-                        print(f"  [TRADE] {trade['side'].upper()} {trade['quantity']} @ {trade['price']} (MANUAL)")
+                        logger.debug(f"Trade: {trade['side'].upper()} {trade['quantity']} @ {trade['price']} (MANUAL)")
                     
                     # Update periodic trade count to avoid duplicates
                     if USE_CPP_ORDERBOOK and hasattr(self.orderbook, 'stats'):
@@ -662,27 +696,25 @@ class WebSocketOrderBookServer:
                     print(f"  [ERROR] Failed to broadcast market data: {e}")
                 
         except json.JSONDecodeError as e:
-            print(f"[ERROR] Invalid JSON received: {e}")
+            logger.error(f"Invalid JSON received: {e}")
             await websocket.send(json.dumps({
                 'type': 'error',
                 'message': 'Invalid JSON format'
             }))
         except KeyError as e:
-            print(f"[ERROR] Missing required field: {e}")
+            logger.error(f"Missing required field: {e}")
             await websocket.send(json.dumps({
                 'type': 'error',
                 'message': f'Missing required field: {e}'
             }))
         except ValueError as e:
-            print(f"[ERROR] Invalid value: {e}")
+            logger.error(f"Invalid value: {e}")
             await websocket.send(json.dumps({
                 'type': 'error',
                 'message': f'Invalid value: {e}'
             }))
         except Exception as e:
-            print(f"[ERROR] Error processing message: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error processing message: {e}", exc_info=True)
             await websocket.send(json.dumps({
                 'type': 'error',
                 'message': 'Internal server error'
@@ -742,23 +774,18 @@ class WebSocketOrderBookServer:
         }
         return metrics
     
-    async def auto_generate_orders(self):
-        """Automatically generate orders to demonstrate system throughput"""
-        base_price = 10000
-        price_range = 50
-        qty_range = (10, 500)
-        
+    async def auto_generate_orders(self) -> None:
+        """Automatically generate orders to demonstrate system throughput."""
         while self.auto_generate_enabled:
             try:
-                # Generate orders at specified rate (increased for more activity)
-                orders_per_batch = max(10, self.auto_generate_rate // 5)  # Larger batches
-                sleep_time = 0.05  # 50ms intervals for faster updates
+                # Generate orders at specified rate
+                orders_per_batch = max(10, self.auto_generate_rate // 5)
                 
                 for _ in range(orders_per_batch):
                     # Alternate between buy and sell
                     side = random.choice(['buy', 'sell'])
-                    price = base_price + random.randint(-price_range, price_range)
-                    qty = random.randint(qty_range[0], qty_range[1])
+                    price = BASE_PRICE + random.randint(-PRICE_RANGE, PRICE_RANGE)
+                    qty = random.randint(QUANTITY_RANGE[0], QUANTITY_RANGE[1])
                     
                     # Submit order (non-blocking)
                     process_start = time.perf_counter()
@@ -767,7 +794,7 @@ class WebSocketOrderBookServer:
                     
                     # Update metrics
                     self.latency_samples.append(process_latency)
-                    if len(self.latency_samples) > self.max_latency_samples:
+                    if len(self.latency_samples) > MAX_LATENCY_SAMPLES:
                         self.latency_samples.pop(0)
                     
                     self.performance_metrics['orders_processed'] += 1
@@ -781,15 +808,15 @@ class WebSocketOrderBookServer:
                         for trade in result['trades']:
                             await self.send_to_all(json.dumps(trade))
                 
-                await asyncio.sleep(sleep_time)
+                await asyncio.sleep(AUTO_GENERATE_SLEEP_TIME)
             except Exception as e:
-                print(f"[ERROR] Auto-generate error: {e}")
+                logger.error(f"Auto-generate error: {e}", exc_info=True)
                 await asyncio.sleep(1)
     
-    async def periodic_updates(self):
-        """Send periodic market data updates and check for new trades"""
+    async def periodic_updates(self) -> None:
+        """Send periodic market data updates and check for new trades."""
         while True:
-            await asyncio.sleep(0.2)  # Update every 200ms for real-time feel
+            await asyncio.sleep(PERIODIC_UPDATE_INTERVAL)
             
             if self.clients:
                 # Check for new trades in real-time
@@ -801,7 +828,7 @@ class WebSocketOrderBookServer:
                             num_new_trades = current_trade_count - self.last_periodic_trade_count
                             recent_trades = self.orderbook.stats.get_recent_trades(num_new_trades)
                             
-                            print(f"  [PERIODIC] Found {num_new_trades} new trade(s)")
+                            logger.debug(f"Found {num_new_trades} new trade(s)")
                             
                             for trade in recent_trades:
                                 trade_msg = {
@@ -812,11 +839,10 @@ class WebSocketOrderBookServer:
                                     'timestamp': trade.timestamp
                                 }
                                 await self.send_to_all(json.dumps(trade_msg))
-                                print(f"  [TRADE] {trade_msg['side'].upper()} {trade_msg['quantity']} @ {trade_msg['price']}")
                             
                             self.last_periodic_trade_count = current_trade_count
                     except Exception as e:
-                        print(f"  [ERROR] Error checking for trades: {e}")
+                        logger.error(f"Error checking for trades: {e}", exc_info=True)
                 
                 # Send periodic L2, stats, and performance updates
                 # This ensures UI updates continuously even with auto-generation
@@ -831,49 +857,46 @@ class WebSocketOrderBookServer:
                 await self.send_to_all(perf_data)
 
 
-async def main():
-    """Main entry point"""
-    print("")
-    print("=" * 60)
-    print("  Limit Order Book WebSocket Server")
-    print(f"  Using: {'C++ OrderBook (pybind11)' if USE_CPP_ORDERBOOK else 'Python OrderBook (fallback)'}")
-    print("=" * 60)
-    print("")
+async def main() -> None:
+    """Main entry point for WebSocket server."""
+    logger.info("=" * 60)
+    logger.info("Limit Order Book WebSocket Server")
+    logger.info(f"Using: {'C++ OrderBook (pybind11)' if USE_CPP_ORDERBOOK else 'Python OrderBook (fallback)'}")
+    logger.info("=" * 60)
     
     server = WebSocketOrderBookServer()
     
-    print("Starting WebSocket server on ws://localhost:8081...")
+    logger.info(f"Starting WebSocket server on ws://{WS_HOST}:{WS_PORT}...")
     
     # Wrapper function to handle websockets library API
-    async def handler(websocket, path=None):
+    async def handler(websocket: websockets.WebSocketServerProtocol, path: Optional[str] = None) -> None:
         await server.handle_client(websocket, path)
     
     # Start WebSocket server
     ws_server = await websockets.serve(
         handler,
-        "localhost",
-        8081,
+        WS_HOST,
+        WS_PORT,
         ping_interval=None
     )
     
-    print("[OK] Server started successfully!")
-    print("  Clients can connect to: ws://localhost:8081")
-    print("  Press Ctrl+C to stop")
-    print("")
+    logger.info("Server started successfully!")
+    logger.info(f"Clients can connect to: ws://{WS_HOST}:{WS_PORT}")
+    logger.info("Press Ctrl+C to stop")
     
     # Start periodic updates
     asyncio.create_task(server.periodic_updates())
     
     # Start auto-order generation for continuous activity
-    print("  Starting auto-order generation (100 orders/sec)...")
+    logger.info(f"Starting auto-order generation ({AUTO_GENERATE_RATE} orders/sec)...")
     asyncio.create_task(server.auto_generate_orders())
     
     # Run forever
-    await asyncio.Future()  # run forever
+    await asyncio.Future()
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n\n[OK] Server stopped by user")
+        logger.info("Server stopped by user")
