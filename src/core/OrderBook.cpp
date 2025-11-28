@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <cstdint>
+#include <vector>
 
 namespace lob {
 
@@ -10,6 +11,8 @@ void OrderBook::addOrder(const OrderPointer& order) {
         executeMarketOrder(order);
     } else {
         addLimitOrder(order);
+        // Trigger matching after adding limit order
+        matchOrders();
     }
 }
 
@@ -43,6 +46,33 @@ void OrderBook::addLimitOrder(const OrderPointer& order) {
     
     invalidateBBO();
     publishOrderEvent(OrderEvent::Type::ADDED, order);
+}
+
+size_t OrderBook::addOrdersBatch(const std::vector<OrderPointer>& orders) {
+    size_t added = 0;
+    
+    // Add all limit orders first (batch add for efficiency)
+    for (const auto& order : orders) {
+        if (!order->isMarketOrder()) {
+            addLimitOrder(order);
+            added++;
+        }
+    }
+    
+    // Match once after all limit orders are added
+    if (added > 0) {
+        matchOrders();
+    }
+    
+    // Execute market orders (these need immediate execution)
+    for (const auto& order : orders) {
+        if (order->isMarketOrder()) {
+            executeMarketOrder(order);
+            added++;
+        }
+    }
+    
+    return added;
 }
 
 void OrderBook::executeMarketOrder(const OrderPointer& order) {

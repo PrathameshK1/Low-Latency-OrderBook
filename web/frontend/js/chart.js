@@ -21,6 +21,12 @@ class DepthChart {
 
     resize() {
         const rect = this.canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            // Canvas not visible yet, use default size
+            this.width = 600;
+            this.height = 400;
+            return;
+        }
         this.canvas.width = rect.width * window.devicePixelRatio;
         this.canvas.height = rect.height * window.devicePixelRatio;
         this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);

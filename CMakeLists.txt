@@ -44,11 +44,24 @@ target_link_libraries(lob_demo PRIVATE lob_core)
 enable_testing()
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
-# WebSocket Server
+# WebSocket Server (build if IXWebSocket is available)
+option(BUILD_WEBSOCKET_SERVER "Build C++ WebSocket server" ON)
 option(USE_ZLIB "Enable zlib support" OFF)
 option(USE_TLS "Enable TLS support" OFF)
-add_subdirectory(include/lob/third_party/IXWebSocket)
-add_subdirectory(web/server)
+
+# Check if IXWebSocket directory exists and has CMakeLists.txt
+if(BUILD_WEBSOCKET_SERVER AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/lob/third_party/IXWebSocket/CMakeLists.txt")
+    add_subdirectory(include/lob/third_party/IXWebSocket)
+    add_subdirectory(web/server)
+    message(STATUS "Building C++ WebSocket server with IXWebSocket")
+elseif(BUILD_WEBSOCKET_SERVER)
+    message(WARNING "IXWebSocket not found. Skipping C++ WebSocket server build.")
+    message(STATUS "  To build the C++ server, clone IXWebSocket:")
+    message(STATUS "  git clone https://github.com/machinezone/IXWebSocket.git include/lob/third_party/IXWebSocket")
+    message(STATUS "  Or use the Python WebSocket server (websocket_server.py) instead")
+else()
+    message(STATUS "C++ WebSocket server build disabled (use BUILD_WEBSOCKET_SERVER=ON to enable)")
+endif()
 
 # Python Bindings
 option(BUILD_PYTHON_BINDINGS "Build Python bindings with pybind11" ON)

@@ -37,7 +37,7 @@ body {
 .container {
     max-width: 1920px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 16px;
 }
 
 /* Header */
@@ -45,13 +45,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 30px;
+    padding: 16px 24px;
     background: var(--card-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .header-left {
@@ -126,12 +126,45 @@ body {
     background: rgba(255, 255, 255, 0.08);
 }
 
-/* Main Grid Layout */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.market-hours {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+}
+
+.market-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.market-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Main Grid Layout - Professional Dashboard */
 .main-grid {
     display: grid;
-    grid-template-columns: 350px 1fr 300px;
-    grid-template-rows: auto auto;
-    gap: 20px;
+    grid-template-columns: 360px 1fr 320px 320px;
+    grid-template-rows: 1fr auto;
+    gap: 16px;
+    height: calc(100vh - 100px);
+    min-height: 800px;
 }
 
 /* Panel Base Styles */
@@ -139,9 +172,9 @@ body {
     background: var(--gradient-card);
     backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -158,15 +191,86 @@ body {
 }
 
 .panel-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     color: var(--text-primary);
 }
 
 /* Order Book Panel */
 .orderbook-panel {
-    grid-row: span 2;
+    grid-row: 1;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+}
+
+/* Your Orders Panel */
+.your-orders-panel {
+    grid-row: 1;
+    grid-column: 4;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+}
+
+.your-orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.manual-count-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--accent);
+    color: var(--text-primary);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.your-orders-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.compact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.compact-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.compact-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+/* Chart Panel */
+.chart-panel {
+    grid-row: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .bbo-display {
@@ -273,9 +377,10 @@ body {
 }
 
 .levels-container {
-    max-height: 500px;
+    flex: 1;
     overflow-y: auto;
     padding-right: 8px;
+    min-height: 0;
 }
 
 .levels-container::-webkit-scrollbar {
@@ -359,15 +464,33 @@ body {
 
 /* Chart Panel */
 .chart-panel {
+    grid-row: 1;
+    grid-column: 2;
     display: flex;
     flex-direction: column;
+    min-height: 600px;
+}
+
+.chart-container {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.chart-panel canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 #depthChart {
     width: 100%;
-    height: 450px;
+    height: 100%;
     border-radius: 12px;
     background: rgba(0, 0, 0, 0.2);
+    display: block;
 }
 
 .chart-legend {
@@ -401,12 +524,63 @@ body {
 
 /* Trades Panel */
 .trades-panel {
-    grid-row: span 2;
+    grid-row: 1;
+    grid-column: 3;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+}
+
+.trades-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.trades-tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.trade-tab {
+    padding: 6px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.trade-tab.active {
+    background: var(--accent);
+    color: var(--text-primary);
+}
+
+.trade-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
 }
 
 .trades-list {
-    max-height: 650px;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
 }
 
 .trade-item {
@@ -439,6 +613,27 @@ body {
 
 .trade-item.sell {
     border-left-color: var(--ask-color);
+}
+
+.trade-item.manual-trade {
+    background: rgba(139, 92, 246, 0.1);
+    border-left-width: 4px;
+}
+
+.trade-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+}
+
+.trade-badge.manual {
+    background: var(--accent);
+    color: var(--text-primary);
 }
 
 .trade-price {
@@ -499,13 +694,20 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1800px) {
+    .main-grid {
+        grid-template-columns: 350px 1fr 300px 300px;
+    }
+}
+
 @media (max-width: 1400px) {
     .main-grid {
         grid-template-columns: 1fr 1fr;
     }
 
     .orderbook-panel,
-    .trades-panel {
+    .trades-panel,
+    .your-orders-panel {
         grid-row: span 1;
     }
 }
@@ -519,11 +721,18 @@ body {
    MODERN ORDER ENTRY UI STYLES
    ============================================== */
 
+/* Order Entry Form */
+.order-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 /* Buy/Sell Tabs */
 .order-side-tabs {
     display: flex;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .side-tab {
@@ -750,9 +959,542 @@ body {
     transform: translateY(0);
 }
 
+/* Performance Metrics Section */
+.performance-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+}
+
+.performance-title {
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.performance-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.perf-metric {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.3s ease;
+}
+
+.perf-metric.highlight {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+    border-color: var(--accent);
+}
+
+.perf-metric:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.perf-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.perf-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.perf-value.high-throughput {
+    color: var(--success);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.perf-peak {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.perf-unit {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Stress Test Section */
+.stress-test-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.stress-test-title {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+}
+
+.stress-test-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stress-test-controls {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.stress-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 120px;
+}
+
+.stress-input-group label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stress-input,
+.stress-select {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.stress-input:focus,
+.stress-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.stress-test-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    white-space: nowrap;
+}
+
+.stress-test-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+.stress-test-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.stress-test-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.stress-test-btn.stress-active {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    animation: stressPulse 0.5s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes stressPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.9);
+    }
+}
+
+body.stress-test-active {
+    animation: stressGlow 2s ease-in-out infinite;
+}
+
+@keyframes stressGlow {
+    0%, 100% {
+        box-shadow: inset 0 0 0 rgba(239, 68, 68, 0);
+    }
+    50% {
+        box-shadow: inset 0 0 100px rgba(239, 68, 68, 0.1);
+    }
+}
+
+.manual-trade-item.compact {
+    padding: 8px 12px;
+    margin-bottom: 6px;
+}
+
+.manual-trade-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.manual-trade-side-compact {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    min-width: 40px;
+    text-align: center;
+}
+
+.manual-trade-side-compact.buy {
+    background: rgba(0, 245, 255, 0.2);
+    color: var(--bid-color);
+}
+
+.manual-trade-side-compact.sell {
+    background: rgba(255, 0, 110, 0.2);
+    color: var(--ask-color);
+}
+
+.manual-trade-price-compact {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    flex: 1;
+}
+
+.manual-trade-qty-compact {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.stress-test-info {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Trade Highlight Animation */
+.trade-item.trade-new {
+    animation: tradeHighlight 0.5s ease-out;
+}
+
+@keyframes tradeHighlight {
+    0% {
+        background: rgba(16, 185, 129, 0.3);
+        transform: scale(1.02);
+    }
+    100% {
+        background: transparent;
+        transform: scale(1);
+    }
+}
+
+/* Your Orders Panel Styles */
+.your-orders-panel .manual-trade-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    animation: tradeAppear 0.3s ease-out;
+}
+
+.your-orders-panel .manual-trade-item:hover {
+    background: rgba(0, 0, 0, 0.4);
+    transform: translateX(2px);
+    border-color: var(--accent);
+}
+
+.your-orders-panel .manual-trade-item.buy {
+    border-left: 3px solid var(--bid-color);
+}
+
+.your-orders-panel .manual-trade-item.sell {
+    border-left: 3px solid var(--ask-color);
+}
+
+.your-orders-panel .manual-trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.your-orders-panel .manual-trade-side {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.your-orders-panel .manual-trade-side.buy {
+    background: rgba(0, 245, 255, 0.2);
+    color: var(--bid-color);
+}
+
+.your-orders-panel .manual-trade-side.sell {
+    background: rgba(255, 0, 110, 0.2);
+    color: var(--ask-color);
+}
+
+.your-orders-panel .manual-trade-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.your-orders-panel .manual-trade-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.your-orders-panel .manual-trade-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.your-orders-panel .manual-trade-qty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.your-orders-panel .status-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.your-orders-panel .status-badge.filled {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.your-orders-panel .status-badge.pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.manual-trades-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.manual-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.manual-trades-list {
+    flex: 1;
+    max-height: 650px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.manual-trade-item {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+    animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.manual-trade-item:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    transform: translateX(4px);
+}
+
+.manual-trade-item.buy {
+    border-left: 4px solid var(--bid-color);
+}
+
+.manual-trade-item.sell {
+    border-left: 4px solid var(--ask-color);
+}
+
+.manual-trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.manual-trade-side {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.manual-trade-side.buy {
+    background: rgba(0, 245, 255, 0.2);
+    color: var(--bid-color);
+}
+
+.manual-trade-side.sell {
+    background: rgba(255, 0, 110, 0.2);
+    color: var(--ask-color);
+}
+
+.manual-trade-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.manual-trade-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.manual-trade-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.manual-trade-qty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+}
+
+.status-badge.filled {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.status-badge.pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+/* Trade Highlight Animation */
+.trade-item.trade-new {
+    animation: tradeHighlight 0.5s ease-out;
+}
+
+@keyframes tradeHighlight {
+    0% {
+        background: rgba(16, 185, 129, 0.3);
+        transform: scale(1.02);
+    }
+    100% {
+        background: transparent;
+        transform: scale(1);
+    }
+}
+
+.manual-trade-item.trade-new {
+    animation: tradeHighlight 0.5s ease-out, slideIn 0.4s ease-out;
+}
+
 /* Mobile Responsive */
 @media (max-width: 600px) {
     .qty-presets {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .performance-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stress-test-controls {
+        flex-direction: column;
+    }
+    
+    .stress-test-btn {
+        width: 100%;
     }
 }

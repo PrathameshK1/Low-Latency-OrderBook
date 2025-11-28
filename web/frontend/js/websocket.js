@@ -9,7 +9,11 @@ class WebSocketManager {
         this.callbacks = {
             'l2_update': [],
             'trade': [],
+            'order_submitted': [],
+            'stress_test_start': [],
+            'stress_test_end': [],
             'stats': [],
+            'performance': [],
             'connection': []
         };
         this.connect();
@@ -68,6 +72,9 @@ class WebSocketManager {
         const type = data.type;
         if (this.callbacks[type]) {
             this.triggerCallbacks(type, data);
+        } else {
+            // Log unhandled message types for debugging
+            console.log('Unhandled message type:', type, data);
         }
     }
 

@@ -81,6 +81,13 @@ public:
     void addOrder(const OrderPointer& order);
     
     /**
+     * @brief Add multiple orders in batch for high throughput
+     * @param orders Vector of orders to add
+     * @return Number of orders successfully added
+     */
+    size_t addOrdersBatch(const std::vector<OrderPointer>& orders);
+    
+    /**
      * @brief Modify an order (cancel + re-add)
      * @param idNumber Order ID to modify
      * @param newPrice New price

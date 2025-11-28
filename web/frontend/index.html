@@ -25,13 +25,18 @@
                 </div>
             </div>
             <div class="header-right">
+                <div class="market-hours">
+                    <span class="market-label">Market Hours</span>
+                    <span class="market-time" id="marketTime">9:30 AM - 3:30 PM IST</span>
+                </div>
                 <button class="theme-toggle" id="themeToggle">🌙</button>
             </div>
         </header>
 
         <!-- Main Grid -->
         <div class="main-grid">
-            <!-- Left Column: Order Book Depth -->
+            <!-- Row 1: Top Section -->
+            <!-- Left: Order Book Depth -->
             <div class="panel orderbook-panel">
                 <h2 class="panel-title">Order Book Depth</h2>
                 <div class="bbo-display">
@@ -74,10 +79,12 @@
                 </div>
             </div>
 
-            <!-- Center Column: Depth Chart -->
+            <!-- Center: Depth Chart -->
             <div class="panel chart-panel">
                 <h2 class="panel-title">Depth Visualization</h2>
-                <canvas id="depthChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="depthChart"></canvas>
+                </div>
                 <div class="chart-legend">
                     <div class="legend-item">
                         <span class="legend-color bid-color"></span>
@@ -90,13 +97,29 @@
                 </div>
             </div>
 
-            <!-- Right Column: Trades & Stats -->
+            <!-- Right: All Trades -->
             <div class="panel trades-panel">
-                <h2 class="panel-title">Recent Trades</h2>
+                <div class="trades-header">
+                    <h2 class="panel-title">All Trades</h2>
+                    <div class="trades-tabs">
+                        <button class="trade-tab active" id="allTradesTab" onclick="window.app.showTradeTab('all')">All</button>
+                        <button class="trade-tab" id="manualTradesTab" onclick="window.app.showTradeTab('manual')">Manual</button>
+                    </div>
+                </div>
                 <div class="trades-list" id="tradesList"></div>
             </div>
 
-            <!-- Bottom Left: Metrics -->
+            <!-- Far Right: Your Orders -->
+            <div class="panel your-orders-panel">
+                <h2 class="panel-title">📝 Your Orders</h2>
+                <div class="your-orders-header">
+                    <span class="manual-count-badge" id="manualCount">0</span>
+                </div>
+                <div class="your-orders-list" id="manualTradesList"></div>
+            </div>
+
+            <!-- Row 2: Bottom Section -->
+            <!-- Performance Metrics -->
             <div class="panel metrics-panel">
                 <h2 class="panel-title">Performance Metrics</h2>
                 <div class="metrics-grid">
@@ -125,11 +148,63 @@
                         <span class="metric-value" id="imbalance">0%</span>
                     </div>
                 </div>
+                
+                <!-- Performance Throughput Metrics -->
+                <div class="performance-section">
+                    <h3 class="performance-title">🚀 Throughput Performance</h3>
+                    <div class="performance-grid">
+                        <div class="perf-metric highlight">
+                            <span class="perf-label">Orders/sec</span>
+                            <span class="perf-value" id="ordersPerSecond">0</span>
+                            <span class="perf-peak">Peak: <span id="peakOrdersPerSecond">0</span></span>
+                        </div>
+                        <div class="perf-metric highlight">
+                            <span class="perf-label">Trades/sec</span>
+                            <span class="perf-value" id="tradesPerSecond">0</span>
+                            <span class="perf-peak">Peak: <span id="peakTradesPerSecond">0</span></span>
+                        </div>
+                        <div class="perf-metric">
+                            <span class="perf-label">Avg Latency</span>
+                            <span class="perf-value" id="avgLatency">0</span>
+                            <span class="perf-unit">μs</span>
+                        </div>
+                        <div class="perf-metric">
+                            <span class="perf-label">Total Orders</span>
+                            <span class="perf-value" id="totalOrdersProcessed">0</span>
+                        </div>
+                        <div class="perf-metric">
+                            <span class="perf-label">Uptime</span>
+                            <span class="perf-value" id="uptime">0s</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Bottom Right: Modern Order Entry -->
+            <!-- Place Order Panel -->
             <div class="panel entry-panel">
                 <h2 class="panel-title">Place Order</h2>
+                
+                <!-- Stress Test Controls -->
+                <div class="stress-test-section">
+                    <h3 class="stress-test-title">⚡ Stress Test Mode</h3>
+                    <div class="stress-test-controls">
+                        <div class="stress-input-group">
+                            <label for="stressNumOrders">Orders:</label>
+                            <input type="number" id="stressNumOrders" class="stress-input" value="1000000" min="1000" max="100000000" step="10000">
+                        </div>
+                        <div class="stress-input-group">
+                            <label for="stressSide">Side:</label>
+                            <select id="stressSide" class="stress-select">
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
+                        <button class="stress-test-btn" id="stressTestBtn">Run Stress Test</button>
+                    </div>
+                    <div class="stress-test-info">
+                        <small>⚡ EXTREME MODE: Generate 10M+ orders/sec to test maximum throughput</small>
+                    </div>
+                </div>
 
                 <!-- Buy/Sell Tabs -->
                 <div class="order-side-tabs">

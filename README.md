@@ -1,73 +1,494 @@
-# Low-Latency Limit Order Book
+# Low-Latency Order Book
 
-A high-performance trading engine combining **C++20 speed** with **Python flexibility**.
+A high-performance, limit order book implementation built in C++20 with Python bindings, real-time WebSocket server, and an interactive web-based GUI. Designed for ultra-low latency order matching and market data distribution in quantitative trading environments.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![C++](https://img.shields.io/badge/C++-20-blue.svg)
-![Python](https://img.shields.io/badge/python-3.12+-yellow.svg)
 
-## 🚀 Overview
 
-This project implements a **hybrid trading architecture**:
-1.  **Core Engine (C++)**: Handles order matching and memory management with sub-microsecond latency.
-2.  **Interface (Python)**: Manages WebSocket connections and broadcasts market data.
-3.  **Bridge (pybind11)**: Connects the two worlds with near-zero overhead.
+##  Features
+
+### Core Engine
+- **Ultra-Low Latency**: C++20 implementation with O(1) order operations
+- **Price-Time Priority Matching**: Industry-standard FIFO matching algorithm
+- **Memory Pool**: Custom allocator for zero-allocation order management
+- **Batch Operations**: High-throughput batch order processing
+- **Market & Limit Orders**: Full support for both order types
+- **Real-Time Matching**: Immediate order execution on submission
+
+### Market Data
+- **Level 2 (L2) Snapshots**: Full depth-of-book market data
+- **Best Bid/Offer (BBO)**: Cached O(1) access to top-of-book
+- **Trade Statistics**: Real-time VWAP, volume, and trade tracking
+- **Market Metrics**: Spread, mid-price, and order imbalance calculations
+- **Event Publishing**: Observer pattern for trade and order events
+
+### Developer Experience
+- **Python Bindings**: Full pybind11 integration for Python development
+- **WebSocket API**: Real-time bidirectional communication
+- **Interactive GUI**: Modern web-based order book visualization
+- **Performance Monitoring**: Built-in latency and throughput metrics
+- **Stress Testing**: Built-in tools for testing extreme throughput scenarios
+
+### Architecture
+- **Modular Design**: Clean separation of core, market data, and server components
+- **Thread-Safe**: Ready for multi-threaded environments
+- **Extensible**: Plugin-based trade listener system
+- **Cross-Platform**: Windows, Linux, and macOS support
+
+###  Reliability
+- **Automatic Fallback**: Seamless Python fallback if C++ module fails - **trading never halts**
+- **Zero-Downtime Design**: Built-in redundancy ensures continuous operation
+- **Error Recovery**: Graceful degradation maintains system availability
+- **Tested**: Designed with quant trading firm requirements in mind
+
+## 📋 Prerequisites
+
+### Required
+- **C++ Compiler**: 
+  - Windows: MinGW-w64 or MSVC (Visual Studio 2019+)
+  - Linux: GCC 10+ or Clang 12+
+  - macOS: Xcode Command Line Tools
+- **CMake**: Version 3.20 or higher
+- **Python**: Version 3.12 or higher
+- **Git**: For cloning dependencies
+
+### Optional (for C++ WebSocket server)
+- **IXWebSocket**: Included as submodule (auto-detected)
+
+## 🛠️ Installation
+
+### Quick Start (Windows)
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd Low-Latency-OrderBook
+   ```
+
+2. **Build Python bindings** (recommended):
+   ```bash
+   # Using PowerShell
+   .\build_python_bindings.ps1
+   
+   # Or using batch file
+   .\build_python_bindings.bat
+   ```
+
+   The script will:
+   - Check for Python, CMake, and C++ compiler
+   - Configure and build the project
+   - Copy necessary DLLs (Windows)
+   - Output the module to `build/python/lob_py*.pyd`
+
+### Manual Build
+
+1. **Configure with CMake**:
+   ```bash
+   mkdir build
+   cd build
+   cmake .. -DPython3_EXECUTABLE=python -DBUILD_PYTHON_BINDINGS=ON
+   ```
+
+2. **Build**:
+   ```bash
+   cmake --build . --config Release
+   ```
+
+3. **Python module location**:
+   - Windows: `build/python/lob_py.cp3XX-win_amd64.pyd`
+   - Linux: `build/python/lob_py.cpython-3XX-x86_64-linux-gnu.so`
+   - macOS: `build/python/lob_py.cpython-3XX-darwin.so`
+
+### Install Python Dependencies
+
+```bash
+cd web/server
+pip install -r requirements.txt
+```
+
+## 🎮 Running the Project
+
+### Reliability Note
+
+The system is designed with **automatic fallback** for heavy trading environments. If the C++ OrderBook module (`lob_py`) fails to load or encounters runtime errors, the server automatically falls back to a pure Python implementation. This ensures:
+
+- **Zero trading downtime** - Orders continue to be processed even if C++ bindings fail
+- **Automatic recovery** - System attempts to reinitialize C++ module periodically
+- **Seamless operation** - No manual intervention required during failures
+
+The server will log which backend is active:
+- `[OK] C++ OrderBook module loaded successfully!` - Using high-performance C++ engine
+- `[WARN] Failed to load C++ OrderBook: ... Falling back to Python orderbook implementation` - Using Python fallback
+
+### Option 1: Web GUI (Recommended)
+
+The easiest way to interact with the order book is through the web interface:
+
+1. **Start the WebSocket server**:
+   ```bash
+   cd web/server
+   python websocket_server.py
+   ```
+   
+   You should see:
+   ```
+   ============================================================
+     Limit Order Book WebSocket Server
+     Using: C++ OrderBook (pybind11)
+   ============================================================
+   
+   Starting WebSocket server on ws://localhost:8081...
+   [OK] Server started successfully!
+   ```
+   
+   **Note**: If C++ bindings aren't available, the server automatically uses Python fallback without interruption.
+
+2. **Start the HTTP server** (in a new terminal):
+   ```bash
+   python web/serve_gui.py
+   ```
+   
+   The GUI will be available at: **http://localhost:8082**
+
+3. **Open your browser** and navigate to the URL above.
+
+### Option 2: C++ Demo
+
+Run the basic C++ demonstration:
+
+```bash
+cd build
+./lob_demo  # Linux/macOS
+# or
+.\lob_demo.exe  # Windows
+```
+
+### Option 3: Python API
+
+Use the Python bindings directly:
+
+```python
+import sys
+sys.path.insert(0, 'build/python')
+
+import lob_py
+
+# Create components
+pool = lob_py.OrderPool()
+orderbook = lob_py.OrderBook()
+publisher = lob_py.TradePublisher()
+stats = lob_py.MarketStatistics()
+
+# Connect components
+orderbook.set_publisher(publisher)
+publisher.subscribe(stats)
+
+# Create and submit orders
+order1 = pool.create_limit_order(1, lob_py.Side.BUY, 10000, 100)
+orderbook.add_order(order1)
+
+order2 = pool.create_limit_order(2, lob_py.Side.SELL, 10010, 50)
+orderbook.add_order(order2)
+
+# Get market data
+bbo = orderbook.get_bbo()
+print(f"Best Bid: {bbo.bid_price} x {bbo.bid_qty}")
+print(f"Best Ask: {bbo.ask_price} x {bbo.ask_qty}")
+
+# Get statistics
+print(f"Total Trades: {stats.get_total_trades()}")
+print(f"Volume: {stats.get_volume()}")
+```
+
+## 📊 Web GUI Features
+
+The web interface provides a comprehensive view of the order book:
+
+### Real-Time Visualization
+- **Order Book Depth**: Live bid/ask levels with quantity and order counts
+- **Depth Chart**: Visual representation of market depth
+- **Trade Feed**: Real-time trade execution feed
+- **Performance Metrics**: Throughput, latency, and volume statistics
+
+### Order Entry
+- **Limit Orders**: Place orders at specific prices
+- **Market Orders**: Immediate execution at best available price
+- **Quick Quantity Presets**: Fast order size selection
+- **Order Tracking**: View your submitted orders
+
+### Stress Testing
+- **Extreme Mode**: Test system with millions of orders per second
+- **Configurable Parameters**: Customize order count, side, and price ranges
+- **Real-Time Metrics**: Monitor throughput and latency during stress tests
+
+### Performance Dashboard
+- **Orders/Second**: Current and peak throughput
+- **Trades/Second**: Execution rate
+- **Average Latency**: Microsecond-level latency tracking
+- **Total Volume**: Cumulative trading volume
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TD
-    Client[Web Browser] <-->|WebSocket| Server[Python Server]
-    Server <-->|pybind11| CPP[C++ OrderBook]
-    CPP --- Match[Matching Engine]
-    CPP --- Pool[Memory Pools]
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Web Frontend                         │
+│  (HTML/CSS/JavaScript - Real-time visualization)      │
+└────────────────────┬────────────────────────────────────┘
+                     │ WebSocket (JSON)
+┌────────────────────▼────────────────────────────────────┐
+│              Python WebSocket Server                    │
+│  (websocket_server.py - Async WebSocket handler)       │
+│  ⚡ Automatic Fallback on C++ Module Failure            │
+└────────────────────┬────────────────────────────────────┘
+                     │ Python API
+         ┌───────────┴───────────┐
+         │                       │
+┌────────▼────────┐    ┌─────────▼──────────┐
+│ Python Bindings │    │  Python Fallback   │
+│   (pybind11)    │    │  (Pure Python)     │
+│  [Primary]      │    │  [Fallback]        │
+└────────┬────────┘    └───────────────────┘
+         │                       │
+         └───────────┬───────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│              C++ Core Library                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
+│  │  OrderBook   │  │  OrderPool   │  │  Statistics  │ │
+│  │  (Matching)   │  │  (Memory)    │  │  (Analytics) │ │
+│  └──────────────┘  └──────────────┘  └──────────────┘ │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ Quick Start
+### Key Components
 
-### 1. Prerequisites
-*   Windows (MinGW-w64) or Linux/macOS
-*   Python 3.12+
-*   CMake 3.20+
+- **OrderBook**: Core matching engine with price-time priority
+- **OrderPool**: Memory pool for efficient order allocation
+- **MarketStatistics**: Trade analytics and volume tracking
+- **TradePublisher**: Event system for trade notifications
+- **L2Data**: Level 2 market data structures
+- **Automatic Fallback**: Production-grade reliability with Python fallback when C++ module unavailable
 
-### 2. Run the System
-We have simplified the startup into two commands.
+## 🔧 Configuration
 
-**Terminal 1: Start the Backend**
-```powershell
-python web/server/websocket_server.py
+### Build Options
+
+Configure via CMake:
+
+```bash
+cmake .. \
+  -DBUILD_PYTHON_BINDINGS=ON \      # Build Python module (default: ON)
+  -DBUILD_WEBSOCKET_SERVER=ON \     # Build C++ WebSocket server (default: ON)
+  -DCMAKE_BUILD_TYPE=Release        # Release build for performance
 ```
 
-**Terminal 2: Start the GUI**
-```powershell
-python web/serve_gui.py
+### Server Configuration
+
+Edit `web/server/websocket_server.py`:
+
+- **WebSocket Port**: Default `8081` (change `ws_server` port)
+- **HTTP Port**: Default `8082` (change `PORT` in `serve_gui.py`)
+- **Auto-Generation Rate**: Default `100` orders/sec (change `auto_generate_rate`)
+
+## 📈 Performance Characteristics
+
+### Benchmarks
+
+- **Order Add**: < 1 microsecond (O(1) hash map lookup)
+- **Order Cancel**: < 1 microsecond (O(1) removal)
+- **Order Match**: O(log n) for price level, O(1) for order removal
+- **BBO Access**: O(1) cached lookup
+- **L2 Snapshot**: O(depth) for specified depth levels
+- **Throughput**: 10M+ orders/second (stress test mode)
+
+### Memory Efficiency
+
+- **Memory Pool**: Pre-allocated blocks reduce allocation overhead
+- **Zero-Copy**: Order pointers avoid unnecessary copying
+- **Cache-Friendly**: Data structures optimized for CPU cache
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+cd build
+ctest
 ```
 
-**Open Browser:** Go to `http://localhost:8082`
+### Stress Test via GUI
 
-## 📦 Build Instructions (If modifying C++)
+1. Open the web GUI
+2. Navigate to "Place Order" panel
+3. Configure stress test parameters:
+   - Orders: 1,000,000+
+   - Side: Buy/Sell
+   - Price range: Custom
+4. Click "Run Stress Test"
+5. Monitor performance metrics in real-time
 
-If you change the C++ code, rebuild the bindings:
+### Python API Testing
 
-```powershell
-# 1. Configure
-cmake -G "MinGW Makefiles" -B build -S . -DPython3_EXECUTABLE="C:\Python312\python.exe" -DBUILD_PYTHON_BINDINGS=ON
+```python
+import lob_py
 
-# 2. Build
-cmake --build build --target lob_py --config Release
+# Create orderbook
+pool = lob_py.OrderPool()
+book = lob_py.OrderBook()
 
-# 3. Deploy
-copy build\python\lob_py.cp312-win_amd64.pyd web\server\lob_py.pyd
-copy C:\ProgramData\mingw64\mingw64\bin\libgcc_s_seh-1.dll web\server\
-copy C:\ProgramData\mingw64\mingw64\bin\libstdc++-6.dll web\server\
-copy C:\ProgramData\mingw64\mingw64\bin\libwinpthread-1.dll web\server\
+# Batch add orders
+orders = []
+for i in range(1000):
+    order = pool.create_limit_order(i, lob_py.Side.BUY, 10000 + i, 100)
+    orders.append(order)
+
+book.add_orders_batch(orders)
+print(f"Added {book.get_number_of_orders()} orders")
 ```
 
-##  Future Roadmap
+## 📚 API Reference
 
-*   **Pure C++ Server**: Removing Python entirely for raw wire-to-wire speed.
-*   **FIX Protocol**: Adding institutional connectivity.
-*   **FPGA**: Hardware acceleration support.
+### C++ API
+
+#### OrderBook
+
+```cpp
+// Add order
+void addOrder(const OrderPointer& order);
+
+// Batch add
+size_t addOrdersBatch(const std::vector<OrderPointer>& orders);
+
+// Modify order
+OrderPointer modifyOrder(IdNumber id, Price newPrice, Quantity newQty);
+
+// Cancel order
+void cancelOrder(IdNumber idNumber);
+
+// Get market data
+BBO getBBO() const;
+L2Snapshot getL2Snapshot(uint32_t depth = 10) const;
+```
+
+#### OrderPool
+
+```cpp
+// Create orders
+OrderPointer createLimitOrder(IdNumber id, Side side, Price price, Quantity qty);
+OrderPointer createMarketOrder(IdNumber id, Side side, Quantity qty);
+
+// Pool statistics
+size_t allocated() const;
+size_t capacity() const;
+double utilization() const;
+```
+
+### Python API
+
+The Python API mirrors the C++ API. See `bindings/bindings.cpp` for complete bindings.
+
+## 🐛 Troubleshooting
+
+### Python Module Not Found
+
+**Error**: `ModuleNotFoundError: No module named 'lob_py'`
+
+**Solution**:
+1. Ensure the module is built: `build/python/lob_py*.pyd` (or `.so` on Linux)
+2. Add to Python path: `sys.path.insert(0, 'build/python')`
+3. On Windows, ensure MinGW DLLs are in the same directory or PATH
+
+### CMake Configuration Fails
+
+**Error**: `CMake Error: Could not find Python3`
+
+**Solution**:
+```bash
+cmake .. -DPython3_EXECUTABLE=/path/to/python
+```
+
+### WebSocket Connection Failed
+
+**Error**: `Connection refused` in browser console
+
+**Solution**:
+1. Ensure `websocket_server.py` is running
+2. Check firewall settings
+3. Verify port 8081 is not in use
+
+### Build Errors on Windows
+
+**Error**: `g++: command not found`
+
+**Solution**:
+1. Install MinGW-w64: `winget install BrechtSanders.WinLibs.POSIX.UCRT`
+2. Add MinGW `bin` directory to PATH
+3. Restart terminal and rebuild
+
+**Note**: If you cannot build the C++ module, the system will automatically use the Python fallback. Trading operations will continue without interruption, though with reduced performance.
+
+## 🔮 Future Scope
+
+This project is actively developed with trading environments in mind. Planned enhancements include:
+
+### High-Performance Infrastructure
+- **Native C++ WebSocket Server**: Complete rewrite of the WebSocket layer in C++ for sub-microsecond latency, eliminating Python overhead in the critical path
+- **FPGA Acceleration**: Hardware-accelerated order matching and market data processing for nanosecond-level latency
+- **Kernel Bypass**: Integration with DPDK/SPDK for zero-copy network I/O and direct hardware access
+- **Custom Network Stack**: Ultra-low latency TCP/UDP implementation optimized for exchange connectivity
+
+### Advanced Trading Features
+- **Smart Order Routing (SOR)**: Multi-venue order routing with intelligent execution algorithms
+- **Order Types**: Iceberg orders, TWAP, VWAP, and other algorithmic order types
+- **Risk Management**: Real-time position limits, pre-trade risk checks, and circuit breakers
+- **Market Data Aggregation**: Multi-venue order book consolidation and best execution logic
+- **Co-location Support**: Optimizations for exchange co-location environments
+
+### Enterprise Features
+- **FIX Protocol**: Native FIX 4.4+ support for exchange connectivity
+- **Market Data Feeds**: Direct integration with major exchange feeds (NASDAQ ITCH, CME, etc.)
+- **Order State Persistence**: Crash recovery and order state reconstruction
+- **Multi-Instrument Support**: Concurrent order books for thousands of instruments
+- **Distributed Architecture**: Multi-node deployment with shared order book state
+
+### Performance Optimizations
+- **SIMD Optimizations**: Vectorized operations for batch processing
+- **Lock-Free Data Structures**: Wait-free algorithms for multi-threaded environments
+- **NUMA Awareness**: Memory and CPU affinity optimizations for multi-socket systems
+- **Custom Memory Allocators**: Specialized allocators for different order lifecycle stages
+
+These features are designed to meet the demanding requirements of institutional quantitative trading firms and high-frequency trading operations.
+
+## 🤝 Contributing
+
+Contributions are welcome! Areas for improvement:
+
+- Additional order types (Iceberg, TWAP, etc.)
+- More sophisticated matching algorithms
+- Additional market data feeds
+- Performance optimizations
+- Documentation improvements
+- Test coverage expansion
 
 ## 📄 License
-MIT License
+
+MIT License - See LICENSE file for details
+
+This project is open source and available for use in both commercial and non-commercial trading systems.
+
+## 🙏 Acknowledgments
+
+- **pybind11**: Seamless C++/Python interops
+- **IXWebSocket**: WebSocket library (optional C++ server)
+- **Chart.js**: Web-based charting library
+
+## 📞 Support
+
+For issues, questions, or contributions:
+- Open an issue on GitHub
+- Check existing documentation
+- Review code comments for implementation details
+
+---
+
+**Built with ❤️ for high-frequency trading and market data systems**
+

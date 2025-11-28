@@ -84,6 +84,11 @@ PYBIND11_MODULE(lob_py, m) {
         .def("capacity", &OrderPool::capacity)
         .def("utilization", &OrderPool::utilization);
     
+    // Expose ITradeListener base class (abstract interface)
+    py::class_<ITradeListener>(m, "ITradeListener")
+        .def("on_trade", &ITradeListener::onTrade)
+        .def("on_order_event", &ITradeListener::onOrderEvent);
+    
     // Expose TradePublisher class
     py::class_<TradePublisher>(m, "TradePublisher")
         .def(py::init<>())
@@ -92,14 +97,15 @@ PYBIND11_MODULE(lob_py, m) {
         .def("publish_trade", &TradePublisher::publishTrade)
         .def("publish_order_event", &TradePublisher::publishOrderEvent);
     
-    // Expose MarketStatistics class
-    py::class_<MarketStatistics>(m, "MarketStatistics")
+    // Expose MarketStatistics class (inherits from ITradeListener)
+    py::class_<MarketStatistics, ITradeListener>(m, "MarketStatistics")
         .def(py::init<>())
         .def("on_trade", &MarketStatistics::onTrade)
         .def("on_order_event", &MarketStatistics::onOrderEvent)
         .def("get_total_trades", &MarketStatistics::getTotalTrades)
         .def("get_volume", &MarketStatistics::getVolume)
         .def("get_vwap", &MarketStatistics::getVWAP)
+        .def("get_recent_trades", &MarketStatistics::getRecentTrades, py::arg("count") = 10)
         .def("reset", &MarketStatistics::reset);
     
     // Expose OrderBook class
@@ -107,6 +113,8 @@ PYBIND11_MODULE(lob_py, m) {
         .def(py::init<>())
         .def("set_publisher", &OrderBook::setPublisher)
         .def("add_order", &OrderBook::addOrder)
+        .def("add_orders_batch", &OrderBook::addOrdersBatch, 
+             "Add multiple orders in batch for high throughput")
         .def("cancel_order", &OrderBook::cancelOrder)
         .def("get_l2_snapshot", &OrderBook::getL2Snapshot, py::arg("depth") = 10)
         .def("get_bbo", &OrderBook::getBBO)
