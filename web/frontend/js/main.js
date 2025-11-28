@@ -4,6 +4,7 @@ class OrderBookApp {
         this.ws = new WebSocketManager('ws://localhost:8081');
         this.orderbook = new OrderBookVisualizer();
         this.chart = new DepthChart('depthChart');
+        this.analytics = new MarketAnalytics();
 
         this.tradesList = document.getElementById('tradesList');
         this.manualTradesList = document.getElementById('manualTradesList');
@@ -127,6 +128,11 @@ class OrderBookApp {
     handleL2Update(data) {
         this.orderbook.updateL2Data(data);
         this.chart.updateData(data.bids, data.asks);
+        
+        // Update analytics
+        if (this.analytics) {
+            this.analytics.updateOrderBook(data);
+        }
 
         // Update metrics
         const bbo = this.getBBO(data.bids, data.asks);
@@ -162,6 +168,11 @@ class OrderBookApp {
     handleTrade(data) {
         // Mark if this is a manual trade (has manual flag)
         const isManual = data.manual === true;
+        
+        // Update analytics
+        if (this.analytics) {
+            this.analytics.updateTrade(data);
+        }
         
         // Add to all trades
         this.trades.unshift(data);

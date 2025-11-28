@@ -180,6 +180,163 @@
                 </div>
             </div>
 
+            <!-- Market Analytics -->
+            <div class="panel analytics-panel">
+                <h2 class="panel-title">📈 Market Analytics</h2>
+                
+                <div class="analytics-grid">
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">⚖️</span>
+                            <span class="insight-label">Order Flow Imbalance</span>
+                        </div>
+                        <div class="insight-value" id="orderFlowImbalance">0%</div>
+                        <div class="insight-bar">
+                            <div class="insight-bar-fill" id="imbalanceBar"></div>
+                        </div>
+                        <div class="insight-detail" id="imbalanceDetail">Neutral</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">💧</span>
+                            <span class="insight-label">Liquidity Score</span>
+                        </div>
+                        <div class="insight-value" id="liquidityScore">-</div>
+                        <div class="insight-bar">
+                            <div class="insight-bar-fill" id="liquidityBar"></div>
+                        </div>
+                        <div class="insight-detail" id="liquidityDetail">Calculating...</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">📊</span>
+                            <span class="insight-label">VWAP</span>
+                        </div>
+                        <div class="insight-value" id="vwap">-</div>
+                        <div class="insight-detail" id="vwapDetail">Volume Weighted Avg Price</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">📉</span>
+                            <span class="insight-label">Spread Volatility</span>
+                        </div>
+                        <div class="insight-value" id="spreadVolatility">-</div>
+                        <div class="insight-detail" id="spreadVolatilityDetail">Price spread stability</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">🎯</span>
+                            <span class="insight-label">Depth Concentration</span>
+                        </div>
+                        <div class="insight-value" id="depthConcentration">-</div>
+                        <div class="insight-detail" id="depthConcentrationDetail">Liquidity distribution</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">⚡</span>
+                            <span class="insight-label">Market Pressure</span>
+                        </div>
+                        <div class="insight-value" id="marketPressure">-</div>
+                        <div class="insight-bar">
+                            <div class="insight-bar-fill" id="pressureBar"></div>
+                        </div>
+                        <div class="insight-detail" id="pressureDetail">Buy/Sell pressure</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">📏</span>
+                            <span class="insight-label">Order Book Depth</span>
+                        </div>
+                        <div class="insight-value" id="orderBookDepth">-</div>
+                        <div class="insight-detail" id="orderBookDepthDetail">Total liquidity available</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">💥</span>
+                            <span class="insight-label">Price Impact</span>
+                        </div>
+                        <div class="insight-value" id="priceImpact">-</div>
+                        <div class="insight-detail" id="priceImpactDetail">Price move per unit volume</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">🚀</span>
+                            <span class="insight-label">Trade Velocity</span>
+                        </div>
+                        <div class="insight-value" id="tradeVelocity">-</div>
+                        <div class="insight-detail" id="tradeVelocityDetail">Trades per minute</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">📐</span>
+                            <span class="insight-label">Relative Spread</span>
+                        </div>
+                        <div class="insight-value" id="relativeSpread">-</div>
+                        <div class="insight-detail" id="relativeSpreadDetail">Spread as % of mid price</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">📦</span>
+                            <span class="insight-label">Avg Order Size</span>
+                        </div>
+                        <div class="insight-value" id="avgOrderSize">-</div>
+                        <div class="insight-detail" id="avgOrderSizeDetail">Mean quantity per order</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">⚡</span>
+                            <span class="insight-label">Market Efficiency</span>
+                        </div>
+                        <div class="insight-value" id="marketEfficiency">-</div>
+                        <div class="insight-bar">
+                            <div class="insight-bar-fill" id="efficiencyBar"></div>
+                        </div>
+                        <div class="insight-detail" id="marketEfficiencyDetail">Tightness & depth ratio</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">📈</span>
+                            <span class="insight-label">Price Momentum</span>
+                        </div>
+                        <div class="insight-value" id="priceMomentum">-</div>
+                        <div class="insight-detail" id="priceMomentumDetail">Short-term price trend</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">🔄</span>
+                            <span class="insight-label">Volume Ratio</span>
+                        </div>
+                        <div class="insight-value" id="volumeRatio">-</div>
+                        <div class="insight-bar">
+                            <div class="insight-bar-fill" id="volumeRatioBar"></div>
+                        </div>
+                        <div class="insight-detail" id="volumeRatioDetail">Buy volume / Sell volume</div>
+                    </div>
+
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <span class="insight-icon">💰</span>
+                            <span class="insight-label">Effective Spread</span>
+                        </div>
+                        <div class="insight-value" id="effectiveSpread">-</div>
+                        <div class="insight-detail" id="effectiveSpreadDetail">Actual trading cost vs mid</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Place Order Panel -->
             <div class="panel entry-panel">
                 <h2 class="panel-title">Place Order</h2>
@@ -290,6 +447,7 @@
     <script src="js/websocket.js"></script>
     <script src="js/orderbook.js"></script>
     <script src="js/chart.js"></script>
+    <script src="js/analytics.js"></script>
     <script src="js/main.js"></script>
 </body>
 

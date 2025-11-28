@@ -226,6 +226,30 @@ The web interface provides a comprehensive view of the order book:
 - **Average Latency**: Microsecond-level latency tracking
 - **Total Volume**: Cumulative trading volume
 
+### Market Analytics & Insights
+A comprehensive quantitative research panel with 15 real-time market microstructure metrics:
+
+#### Market Microstructure Metrics
+- **Order Flow Imbalance**: Buy/sell pressure at best bid/ask with visual indicators
+- **Liquidity Score**: Market depth quality assessment (0-100 scale)
+- **VWAP**: Volume Weighted Average Price with deviation from last price
+- **Spread Volatility**: Price spread stability (coefficient of variation)
+- **Depth Concentration**: Liquidity distribution across order book levels
+- **Market Pressure**: Recent trade flow analysis for buy/sell pressure
+
+#### Quantitative Trading Metrics
+- **Order Book Depth**: Total liquidity available (bid + ask)
+- **Price Impact**: Price movement per unit volume (basis points)
+- **Trade Velocity**: Trades per minute activity indicator
+- **Relative Spread**: Spread as percentage of mid price
+- **Avg Order Size**: Mean quantity per order
+- **Market Efficiency**: Combined tightness and depth ratio
+- **Price Momentum**: Short-term price trend analysis
+- **Volume Ratio**: Buy vs sell volume ratio
+- **Effective Spread**: Actual trading cost vs quoted spread
+
+All metrics update in real-time and provide color-coded visual feedback for quick market assessment. Designed for quantitative researchers and algorithmic traders.
+
 ## 🏗️ Architecture
 
 ```

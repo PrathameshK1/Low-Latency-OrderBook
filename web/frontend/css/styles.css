@@ -215,6 +215,87 @@ body {
     min-height: 600px;
 }
 
+/* Analytics Panel */
+.analytics-panel {
+    grid-row: 2;
+    grid-column: 3 / 5;
+    display: flex;
+    flex-direction: column;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.insight-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.insight-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.insight-icon {
+    font-size: 14px;
+}
+
+.insight-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.insight-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 2px 0;
+}
+
+.insight-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 6px 0;
+}
+
+.insight-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--bid-color));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+.insight-detail {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 .your-orders-header {
     display: flex;
     justify-content: space-between;
